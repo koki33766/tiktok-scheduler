@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>TikTok Scheduler</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 60px auto; padding: 0 20px; }
+    h1 { color: #fe2c55; }
+    .btn { display: inline-block; padding: 12px 24px; background: #fe2c55; color: white;
+           text-decoration: none; border-radius: 8px; font-size: 16px; border: none; cursor: pointer; }
+    .btn-gray { background: #888; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 24px; margin-top: 24px; }
+    input[type=file], input[type=datetime-local] { width: 100%; margin: 8px 0 16px; padding: 8px; box-sizing: border-box; }
+    label { font-weight: bold; }
+    .footer { margin-top: 40px; font-size: 12px; color: #aaa; }
+  </style>
+</head>
+<body>
+  <h1>TikTok Scheduler</h1>
+  <p>自分のTikTokアカウントに動画をスケジュール投稿するツールです。</p>
+
+  {% if user %}
+    <p>ログイン中: <strong>{{ user.open_id }}</strong> &nbsp;
+      <a href="/logout" class="btn btn-gray" style="font-size:13px;padding:6px 14px;">ログアウト</a>
+    </p>
+
+    <div class="card">
+      <h2>動画をスケジュール投稿</h2>
+      <form action="/upload" method="post" enctype="multipart/form-data">
+        <label>動画ファイル</label>
+        <input type="file" name="video" accept="video/*" required>
+
+        <label>投稿日時</label>
+        <input type="datetime-local" name="scheduled_at" required>
+
+        <button type="submit" class="btn">スケジュール登録</button>
+      </form>
+    </div>
+  {% else %}
+    <div class="card">
+      <p>TikTokアカウントでログインして、動画の投稿スケジュールを管理できます。</p>
+      <a href="/login" class="btn">TikTokでログイン</a>
+    </div>
+  {% endif %}
+
+  <div class="footer">
+    <a href="/privacy">プライバシーポリシー</a>
+  </div>
+</body>
+</html>
