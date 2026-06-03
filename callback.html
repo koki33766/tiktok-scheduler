@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>TikTok OAuth Callback</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 60px auto; padding: 20px; background: #fafafa; }
+    h2   { margin-bottom: 4px; }
+    .ok  { color: #22aa44; font-weight: bold; font-size: 20px; }
+    .err { color: #cc2222; font-weight: bold; font-size: 20px; }
+    .box { background: #fff; border: 2px solid #22aa44; border-radius: 10px;
+           padding: 20px; margin: 16px 0; }
+    .box.error { border-color: #cc2222; }
+    code { background: #111; color: #7fff7f; padding: 12px 14px; border-radius: 6px;
+           display: block; word-break: break-all; font-size: 13px; margin: 10px 0; }
+    pre  { background: #f0f0f0; padding: 12px; border-radius: 6px;
+           font-size: 13px; word-break: break-all; white-space: pre-wrap; }
+    button { background: #22aa44; color: #fff; border: none; padding: 9px 20px;
+             border-radius: 6px; cursor: pointer; font-size: 14px; }
+    button:hover { background: #1a8833; }
+    small { color: #888; }
+  </style>
+</head>
+<body>
+  <h2>TikTok OAuth コールバック</h2>
+  <div id="result"></div>
+
+  <script>
+    const p     = new URLSearchParams(window.location.search);
+    const code  = p.get('code');
+    const state = p.get('state');
+    const err   = p.get('error');
+    const desc  = p.get('error_description');
+    const div   = document.getElementById('result');
+
+    if (err) {
+      div.innerHTML = `
+        <p class="err">❌ 認証エラー</p>
+        <div class="box error">
+          <b>error:</b> ${err}<br>
+          <b>description:</b> ${desc || '—'}
+        </div>`;
+    } else if (code) {
+      div.innerHTML = `
+        <p class="ok">✅ 認証成功！</p>
+        <div class="box">
+          <b>code</b>（次のコマンドで使います）：
+          <code id="code">${code}</code>
+          <button onclick="copyCode(this)">コピー</button>
+        </div>
+        <div class="box" style="border-color:#4466cc">
+          <b>次のステップ</b> — ターミナルで実行：
+          <pre>node get_token.js ${code}</pre>
+        </div>
+        <small>state: ${state || '—'}</small>`;
+    } else {
+      div.innerHTML = `<p>パラメータが見つかりません。TikTok認証フローから来てください。</p>`;
+    }
+
+    function copyCode(btn) {
+      navigator.clipboard.writeText(document.getElementById('code').textContent)
+        .then(() => { btn.textContent = 'コピーしました！'; setTimeout(() => btn.textContent = 'コピー', 2000); });
+    }
+  </script>
+</body>
+</html>
