@@ -724,11 +724,8 @@
 
   function doLogin() {
     closeOAuth();
-    document.getElementById('header-nav').innerHTML = `
-      <span style="font-size:13px;color:var(--muted);font-weight:600;">@creator_demo</span>
-      <span class="ava" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;background:linear-gradient(135deg,var(--pink),#7c2ae8);">C</span>
-      <button class="btn btn-ghost" style="padding:9px 16px;font-size:13px;" onclick="doLogout()">Log out</button>`;
-    showToast('✅ TikTok account connected!');
+    showToast('✅ TikTok account connected! Opening your dashboard…');
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, 900);
   }
   function doLogout() {
     document.getElementById('header-nav').innerHTML = `

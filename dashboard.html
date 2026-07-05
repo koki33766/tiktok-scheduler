@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | PostFlow</title>
+  <meta name="description" content="PostFlow dashboard — schedule, manage and analyze your TikTok posts.">
+  <link rel="icon" type="image/png" href="postflow_icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pink: #fe2c55; --cyan: #25f4ee; --bg: #0b0b10; --bg-soft: #12121a;
+      --card: #16161f; --card-2: #1c1c27; --line: rgba(255,255,255,.08);
+      --text: #f4f4f6; --muted: #9a9aa8; --green: #34d399; --yellow: #fbbf24; --red: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; }
+
+    .app { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+    @media (max-width: 900px) { .app { grid-template-columns: 1fr; } .sidebar { display: none; } .mobile-nav { display: flex !important; } }
+
+    /* ---- sidebar ---- */
+    .sidebar { background: var(--bg-soft); border-right: 1px solid var(--line); padding: 22px 14px; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; letter-spacing: -.02em; padding: 4px 12px 22px; }
+    .logo-mark { width: 28px; height: 28px; border-radius: 8px; position: relative; flex: none; background: linear-gradient(135deg, var(--pink), #ff5c7f); box-shadow: 0 0 16px rgba(254,44,85,.45); }
+    .logo-mark::after { content: ""; position: absolute; inset: 0; border-radius: 8px; background: linear-gradient(315deg, rgba(37,244,238,.55), transparent 55%); }
+    .logo em { font-style: normal; background: linear-gradient(90deg, var(--pink), #ff7a94); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .side-item {
+      display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 10px; width: 100%;
+      font-size: 14px; color: var(--muted); font-weight: 600; margin-bottom: 4px; cursor: pointer;
+      background: none; border: none; text-align: left; transition: background .15s, color .15s;
+    }
+    .side-item:hover { background: rgba(255,255,255,.05); color: var(--text); }
+    .side-item.active { background: rgba(254,44,85,.12); color: #ff8ba3; font-weight: 700; }
+    .side-item .ico { width: 20px; text-align: center; }
+    .side-foot { margin-top: auto; border-top: 1px solid var(--line); padding-top: 14px; }
+    .acct { display: flex; align-items: center; gap: 10px; padding: 8px 12px; }
+    .acct .ava { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; color: #fff; background: linear-gradient(135deg, var(--pink), #7c2ae8); flex: none; }
+    .acct .name { font-size: 13px; font-weight: 700; }
+    .acct .plan { font-size: 11px; color: var(--cyan); font-weight: 700; }
+
+    /* ---- mobile top nav ---- */
+    .mobile-nav { display: none; position: sticky; top: 0; z-index: 40; background: rgba(11,11,16,.85); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); padding: 10px 16px; gap: 6px; overflow-x: auto; }
+    .mobile-nav button { flex: none; background: var(--card); border: 1px solid var(--line); color: var(--muted); font-size: 12.5px; font-weight: 700; padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+    .mobile-nav button.active { background: rgba(254,44,85,.15); color: #ff8ba3; border-color: rgba(254,44,85,.4); }
+
+    /* ---- main ---- */
+    .main { padding: 28px 32px 64px; max-width: 1060px; width: 100%; }
+    @media (max-width: 900px) { .main { padding: 20px 16px 60px; } }
+    .pane-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .pane-head h1 { font-size: 24px; font-weight: 900; letter-spacing: -.02em; }
+    .pane-head .sub { font-size: 13.5px; color: var(--muted); margin-top: 4px; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 20px; border-radius: 11px; font-size: 13.5px; font-weight: 700; border: none; cursor: pointer; transition: transform .15s, box-shadow .15s; }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: linear-gradient(90deg, var(--pink), #ff4d73); color: #fff; box-shadow: 0 4px 20px rgba(254,44,85,.3); }
+    .btn-primary:hover { box-shadow: 0 6px 28px rgba(254,44,85,.5); transform: translateY(-1px); }
+    .btn-ghost { background: rgba(255,255,255,.06); color: var(--text); border: 1px solid var(--line); }
+    .btn-danger { background: rgba(248,113,113,.1); color: var(--red); border: 1px solid rgba(248,113,113,.3); }
+
+    .view { display: none; }
+    .view.active { display: block; animation: fade .25s ease; }
+    @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    @media (max-width: 760px) { .kpis { grid-template-columns: 1fr 1fr; } }
+    .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+    .kpi .k-label { font-size: 12px; color: var(--muted); font-weight: 600; }
+    .kpi .k-value { font-size: 26px; font-weight: 800; margin-top: 6px; letter-spacing: -.02em; }
+    .kpi .k-delta { font-size: 12px; font-weight: 700; margin-top: 5px; }
+    .k-delta.up { color: var(--green); } .k-delta.dim { color: var(--muted); font-weight: 500; }
+
+    .panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+    .panel h3 { font-size: 15px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+    .panel h3 .more { font-size: 12px; color: var(--cyan); font-weight: 700; cursor: pointer; }
+
+    /* queue table */
+    .tbl-wrap { overflow-x: auto; }
+    table.queue { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 620px; }
+    .queue th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #6d6d7c; padding: 10px 12px; border-bottom: 1px solid var(--line); font-weight: 700; }
+    .queue td { padding: 13px 12px; border-bottom: 1px solid rgba(255,255,255,.05); color: #d4d4dc; vertical-align: middle; }
+    .queue tr:last-child td { border-bottom: none; }
+    .thumb { width: 32px; height: 44px; border-radius: 7px; display: inline-block; vertical-align: middle; margin-right: 10px; flex: none; }
+    .badge { display: inline-block; padding: 4px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+    .badge-sched { background: rgba(251,191,36,.12); color: var(--yellow); border: 1px solid rgba(251,191,36,.3); }
+    .badge-live  { background: rgba(52,211,153,.12); color: var(--green); border: 1px solid rgba(52,211,153,.3); }
+    .row-del { background: none; border: none; color: #6d6d7c; cursor: pointer; font-size: 15px; padding: 4px 8px; border-radius: 7px; }
+    .row-del:hover { color: var(--red); background: rgba(248,113,113,.08); }
+    .empty { text-align: center; color: var(--muted); font-size: 13.5px; padding: 28px 10px; }
+    .empty .big { font-size: 30px; display: block; margin-bottom: 8px; }
+
+    /* calendar */
+    .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .cal-head .month { font-size: 16px; font-weight: 800; }
+    .cal-nav { display: flex; gap: 8px; }
+    .cal-nav button { background: var(--card-2); border: 1px solid var(--line); color: var(--text); width: 34px; height: 34px; border-radius: 9px; cursor: pointer; font-size: 15px; }
+    .cal-nav button:hover { border-color: var(--pink); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .cal-grid .dow { font-size: 11px; color: #6d6d7c; text-align: center; font-weight: 800; padding: 6px 0; text-transform: uppercase; letter-spacing: .05em; }
+    .cal-cell { min-height: 86px; border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 6px; background: var(--bg-soft); }
+    .cal-cell.other { opacity: .35; }
+    .cal-cell.today { border-color: var(--cyan); box-shadow: 0 0 0 1px rgba(37,244,238,.3); }
+    .cal-cell .d { font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+    .cal-cell.today .d { color: var(--cyan); }
+    .chip { font-size: 10px; font-weight: 700; border-radius: 6px; padding: 4px 6px; margin-bottom: 3px; line-height: 1.25; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .chip-pink { background: rgba(254,44,85,.16); color: #ff8ba3; border: 1px solid rgba(254,44,85,.3); }
+    .chip-green { background: rgba(52,211,153,.12); color: #6ee7b7; border: 1px solid rgba(52,211,153,.3); }
+
+    /* composer */
+    .composer-grid { display: grid; grid-template-columns: 1fr 300px; gap: 16px; align-items: start; }
+    @media (max-width: 900px) { .composer-grid { grid-template-columns: 1fr; } }
+    .form-field { margin-bottom: 15px; }
+    .form-field label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 7px; }
+    .form-field input, .form-field textarea, .form-field select {
+      width: 100%; padding: 12px 14px; background: var(--card-2); border: 1px solid var(--line);
+      border-radius: 10px; font-size: 14px; color: var(--text); font-family: inherit; outline: none; transition: border-color .15s;
+    }
+    .form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color: var(--pink); }
+    .form-field textarea { min-height: 84px; resize: vertical; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+    .dropzone { border: 2px dashed rgba(255,255,255,.16); border-radius: 12px; padding: 34px 20px; text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 16px; cursor: pointer; transition: border-color .15s, background .15s; }
+    .dropzone:hover { border-color: var(--pink); background: rgba(254,44,85,.04); }
+    .dropzone.done { border-color: var(--green); color: var(--green); }
+    .char-count { font-size: 11px; color: #5c5c6b; text-align: right; margin-top: 4px; }
+    .best-time-hint { display: flex; align-items: center; gap: 10px; background: rgba(37,244,238,.06); border: 1px solid rgba(37,244,238,.2); border-radius: 10px; padding: 11px 14px; font-size: 13px; color: #8ef5f1; margin-bottom: 16px; cursor: pointer; }
+    .best-time-hint:hover { background: rgba(37,244,238,.1); }
+
+    /* phone preview */
+    .phone { background: #000; border: 1px solid var(--line); border-radius: 26px; padding: 10px; position: sticky; top: 20px; }
+    .phone-screen { position: relative; aspect-ratio: 9/16; border-radius: 18px; overflow: hidden; background: linear-gradient(160deg, #1c1030, #34112b 55%, #0d1b2e); display: flex; }
+    .phone-cap { text-align: center; font-size: 11px; color: #6d6d7c; padding: 10px 0 4px; font-weight: 600; }
+    .pv-overlay { margin-top: auto; padding: 14px; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,.72)); }
+    .pv-user { font-size: 12.5px; font-weight: 800; margin-bottom: 5px; }
+    .pv-cap { font-size: 11.5px; line-height: 1.5; color: #e6e6ee; word-break: break-word; }
+    .pv-tags { font-size: 11.5px; color: var(--cyan); font-weight: 700; margin-top: 3px; word-break: break-word; }
+    .pv-time { position: absolute; top: 12px; left: 12px; font-size: 10.5px; font-weight: 800; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.15); padding: 5px 10px; border-radius: 999px; color: var(--yellow); }
+
+    /* analytics */
+    .chart-card svg { width: 100%; height: auto; display: block; }
+    .legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-top: 12px; flex-wrap: wrap; }
+    .legend .key { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+    .bars { display: flex; align-items: flex-end; gap: 10px; height: 150px; padding-top: 8px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; justify-content: flex-end; }
+    .bar { width: 100%; max-width: 44px; border-radius: 8px 8px 3px 3px; background: linear-gradient(180deg, var(--pink), rgba(254,44,85,.25)); position: relative; }
+    .bar.best { background: linear-gradient(180deg, var(--cyan), rgba(37,244,238,.2)); }
+    .bar-lbl { font-size: 10.5px; color: #6d6d7c; font-weight: 700; }
+
+    /* settings */
+    .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,.05); flex-wrap: wrap; }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-row .t { font-size: 14px; font-weight: 700; }
+    .setting-row .d { font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.55; max-width: 480px; }
+    .setting-row a { color: var(--cyan); }
+
+    /* toast */
+    #toast { display: none; position: fixed; bottom: 28px; right: 28px; z-index: 200; background: var(--card); border: 1px solid rgba(52,211,153,.4); color: var(--green); padding: 15px 24px; border-radius: 12px; font-size: 14px; font-weight: 700; box-shadow: 0 12px 40px rgba(0,0,0,.5); }
+
+    .demo-note { font-size: 12px; color: #5c5c6b; text-align: center; margin-top: 28px; line-height: 1.6; }
+    .demo-note a { color: var(--cyan); }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <a class="logo" href="index.html"><span class="logo-mark"></span>Post<em>Flow</em></a>
+    <button class="side-item active" data-view="home" onclick="go('home')"><span class="ico">📊</span> Dashboard</button>
+    <button class="side-item" data-view="calendar" onclick="go('calendar')"><span class="ico">🗓️</span> Calendar</button>
+    <button class="side-item" data-view="compose" onclick="go('compose')"><span class="ico">🎬</span> New Post</button>
+    <button class="side-item" data-view="analytics" onclick="go('analytics')"><span class="ico">📈</span> Analytics</button>
+    <button class="side-item" data-view="settings" onclick="go('settings')"><span class="ico">⚙️</span> Settings</button>
+    <div class="side-foot">
+      <div class="acct">
+        <span class="ava">C</span>
+        <div>
+          <div class="name">@creator_demo</div>
+          <div class="plan">Creator plan</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div>
+    <!-- mobile nav -->
+    <div class="mobile-nav">
+      <button class="active" data-view="home" onclick="go('home')">📊 Dashboard</button>
+      <button data-view="calendar" onclick="go('calendar')">🗓️ Calendar</button>
+      <button data-view="compose" onclick="go('compose')">🎬 New Post</button>
+      <button data-view="analytics" onclick="go('analytics')">📈 Analytics</button>
+      <button data-view="settings" onclick="go('settings')">⚙️ Settings</button>
+    </div>
+
+    <main class="main">
+
+      <!-- ============ VIEW: HOME ============ -->
+      <section class="view active" id="view-home">
+        <div class="pane-head">
+          <div><h1 id="greeting">Good evening 👋</h1><div class="sub" id="home-sub">Here's what's coming up on your account.</div></div>
+          <button class="btn btn-primary" onclick="go('compose')">+ New Post</button>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="k-label">Scheduled</div><div class="k-value" id="kpi-sched">0</div><div class="k-delta dim" id="kpi-next">—</div></div>
+          <div class="kpi"><div class="k-label">Published this month</div><div class="k-value" id="kpi-pub">12</div><div class="k-delta up">▲ 33% vs last month</div></div>
+          <div class="kpi"><div class="k-label">Avg. views / post</div><div class="k-value">8.4K</div><div class="k-delta up">▲ 12%</div></div>
+          <div class="kpi"><div class="k-label">Best window</div><div class="k-value" style="font-size:18px;padding-top:6px;">Tue–Thu 22:00</div><div class="k-delta dim">Based on your audience</div></div>
+        </div>
+        <div class="panel">
+          <h3>⏳ Upcoming queue <span class="more" onclick="go('calendar')">View calendar →</span></h3>
+          <div class="tbl-wrap"><table class="queue">
+            <thead><tr><th>Video</th><th>Caption</th><th>Scheduled at</th><th>Status</th><th></th></tr></thead>
+            <tbody id="queue-body"></tbody>
+          </table></div>
+          <div class="empty" id="queue-empty" style="display:none;"><span class="big">🎬</span>No posts scheduled yet.<br><br><button class="btn btn-primary" onclick="go('compose')">Schedule your first post</button></div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: CALENDAR ============ -->
+      <section class="view" id="view-calendar">
+        <div class="pane-head">
+          <div><h1>Content calendar</h1><div class="sub">Your posting rhythm at a glance.</div></div>
+          <button class="btn btn-primary" onclick="go('compose')">+ New Post</button>
+        </div>
+        <div class="panel">
+          <div class="cal-head">
+            <div class="month" id="cal-month"></div>
+            <div class="cal-nav">
+              <button onclick="calShift(-1)">‹</button>
+              <button onclick="calToday()" style="width:auto;padding:0 14px;font-size:12px;font-weight:700;">Today</button>
+              <button onclick="calShift(1)">›</button>
+            </div>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: COMPOSE ============ -->
+      <section class="view" id="view-compose">
+        <div class="pane-head">
+          <div><h1>Schedule a new post</h1><div class="sub">Your video goes live via TikTok's official Content Posting API.</div></div>
+        </div>
+        <div class="composer-grid">
+          <div class="panel" style="margin-bottom:0;">
+            <div class="dropzone" id="drop" onclick="pickFile()">🎬 &nbsp; Click to select a video &nbsp;·&nbsp; MP4, MOV — up to 500MB</div>
+            <div class="best-time-hint" onclick="useBestTime()">⚡ Suggested window for your audience: <strong>&nbsp;Tuesday 22:00</strong> &nbsp;<span style="opacity:.7;">(tap to use)</span></div>
+            <div class="form-field">
+              <label>Caption</label>
+              <textarea id="f-caption" maxlength="150" placeholder="Write your caption here…" oninput="syncPreview()"></textarea>
+              <div class="char-count"><span id="cap-count">0</span>/150</div>
+            </div>
+            <div class="form-field"><label>Hashtags</label><input id="f-tags" type="text" placeholder="#tiktok #creator #fyp" oninput="syncPreview()"></div>
+            <div class="form-row">
+              <div class="form-field"><label>Scheduled date &amp; time</label><input id="f-when" type="datetime-local" oninput="syncPreview()"></div>
+              <div class="form-field"><label>Privacy</label><select id="f-privacy"><option>Public</option><option>Friends only</option><option>Private</option></select></div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;padding:14px;" onclick="submitPost()">Schedule post</button>
+          </div>
+          <div>
+            <div class="phone">
+              <div class="phone-screen">
+                <div class="pv-time" id="pv-time">⏰ Not set</div>
+                <div class="pv-overlay">
+                  <div class="pv-user">@creator_demo</div>
+                  <div class="pv-cap" id="pv-cap">Your caption preview appears here…</div>
+                  <div class="pv-tags" id="pv-tags"></div>
+                </div>
+              </div>
+              <div class="phone-cap">Live preview</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: ANALYTICS ============ -->
+      <section class="view" id="view-analytics">
+        <div class="pane-head">
+          <div><h1>Analytics</h1><div class="sub">Last 14 days · @creator_demo</div></div>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="k-label">Total views</div><div class="k-value">118K</div><div class="k-delta up">▲ 21%</div></div>
+          <div class="kpi"><div class="k-label">New followers</div><div class="k-value">+842</div><div class="k-delta up">▲ 9%</div></div>
+          <div class="kpi"><div class="k-label">Profile visits</div><div class="k-value">5,310</div><div class="k-delta up">▲ 15%</div></div>
+          <div class="kpi"><div class="k-label">Posting streak</div><div class="k-value">18 days</div><div class="k-delta dim">Personal best 🎉</div></div>
+        </div>
+        <div class="panel chart-card">
+          <h3>👀 Views per day</h3>
+          <svg viewBox="0 0 560 180" preserveAspectRatio="none" aria-label="Views per day line chart">
+            <defs>
+              <linearGradient id="ga" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#fe2c55" stop-opacity=".35"/><stop offset="1" stop-color="#fe2c55" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <g stroke="rgba(255,255,255,.06)" stroke-width="1">
+              <line x1="0" y1="40" x2="560" y2="40"/><line x1="0" y1="80" x2="560" y2="80"/>
+              <line x1="0" y1="120" x2="560" y2="120"/><line x1="0" y1="160" x2="560" y2="160"/>
+            </g>
+            <path d="M0,150 L40,138 L80,144 L120,118 L160,126 L200,96 L240,108 L280,78 L320,92 L360,60 L400,74 L440,46 L480,58 L520,30 L560,40 L560,180 L0,180 Z" fill="url(#ga)"/>
+            <path d="M0,150 L40,138 L80,144 L120,118 L160,126 L200,96 L240,108 L280,78 L320,92 L360,60 L400,74 L440,46 L480,58 L520,30 L560,40" fill="none" stroke="#fe2c55" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="520" cy="30" r="5" fill="#fe2c55"/><circle cx="520" cy="30" r="9" fill="rgba(254,44,85,.25)"/>
+          </svg>
+          <div class="legend"><span><span class="key" style="background:#fe2c55;"></span>Views (peak 14.2K on Jul 3)</span></div>
+        </div>
+        <div class="panel">
+          <h3>⏰ Views by posting hour</h3>
+          <div class="bars">
+            <div class="bar-col"><div class="bar" style="height:22%;"></div><div class="bar-lbl">9:00</div></div>
+            <div class="bar-col"><div class="bar" style="height:30%;"></div><div class="bar-lbl">12:00</div></div>
+            <div class="bar-col"><div class="bar" style="height:26%;"></div><div class="bar-lbl">15:00</div></div>
+            <div class="bar-col"><div class="bar" style="height:44%;"></div><div class="bar-lbl">18:00</div></div>
+            <div class="bar-col"><div class="bar" style="height:66%;"></div><div class="bar-lbl">20:00</div></div>
+            <div class="bar-col"><div class="bar best" style="height:100%;"></div><div class="bar-lbl">22:00</div></div>
+            <div class="bar-col"><div class="bar" style="height:58%;"></div><div class="bar-lbl">0:00</div></div>
+          </div>
+          <div class="legend"><span><span class="key" style="background:#25f4ee;"></span>Best window — PostFlow suggests this automatically</span></div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: SETTINGS ============ -->
+      <section class="view" id="view-settings">
+        <div class="pane-head"><div><h1>Settings</h1><div class="sub">Account, permissions and plan.</div></div></div>
+        <div class="panel">
+          <h3>🔗 Connected account</h3>
+          <div class="setting-row">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="acct" style="padding:0;"><span class="ava">C</span></span>
+              <div><div class="t">@creator_demo</div><div class="d">Connected via TikTok Login Kit (OAuth) · Scopes: user.info.basic, video.upload, video.publish</div></div>
+            </div>
+            <button class="btn btn-danger" onclick="disconnect()">Disconnect</button>
+          </div>
+          <div class="setting-row">
+            <div><div class="t">Revoke from TikTok</div><div class="d">You can also revoke PostFlow's access anytime from the TikTok app: <strong>Settings → Security → Manage app permissions</strong>. Revoking immediately invalidates our token.</div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>💳 Plan</h3>
+          <div class="setting-row">
+            <div><div class="t">Creator — $9/month</div><div class="d">Unlimited scheduled posts, best-time suggestions, priority queue. Next renewal: Aug 5, 2026.</div></div>
+            <button class="btn btn-ghost">Manage plan</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>🛡️ Privacy &amp; data</h3>
+          <div class="setting-row">
+            <div><div class="t">Your data</div><div class="d">Videos are streamed directly to TikTok and never stored on our servers. OAuth tokens live in your session only. See the <a href="privacy-policy.html">Privacy Policy</a> and <a href="terms-of-service.html">Terms of Service</a>.</div></div>
+            <button class="btn btn-ghost" onclick="clearData()">Clear local data</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="demo-note">You're viewing the PostFlow interactive demo. Scheduled posts are saved in your browser only.<br><a href="index.html">← Back to home</a></div>
+    </main>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ================= state =================
+  const LS_KEY = 'pf_queue_v1';
+  const seed = () => {
+    const d = n => { const x = new Date(); x.setDate(x.getDate() + n); return x; };
+    const at = (dt, h) => { dt.setHours(h, 0, 0, 0); return dt.toISOString(); };
+    return [
+      { id: 1, file: 'recipe_012.mp4', cap: 'Late-night ramen hack 🍜', tags: '#food #ramen #fyp', when: at(d(2), 22), privacy: 'Public', status: 'scheduled', grad: 'linear-gradient(135deg,#fe2c55,#7c2ae8)' },
+      { id: 2, file: 'qanda_pt2.mp4', cap: 'Answering your questions', tags: '#qa #creator', when: at(d(4), 22), privacy: 'Public', status: 'scheduled', grad: 'linear-gradient(135deg,#25f4ee,#2a7ce8)' },
+      { id: 3, file: 'morning_vlog.mp4', cap: '5AM routine that changed me', tags: '#morning #routine', when: at(d(-1), 9), privacy: 'Public', status: 'published', grad: 'linear-gradient(135deg,#34d399,#25f4ee)' },
+    ];
+  };
+  let queue;
+  try { queue = JSON.parse(localStorage.getItem(LS_KEY)) || seed(); }
+  catch (e) { queue = seed(); }
+  const save = () => { try { localStorage.setItem(LS_KEY, JSON.stringify(queue)); } catch (e) {} };
+
+  const GRADS = ['linear-gradient(135deg,#fe2c55,#7c2ae8)','linear-gradient(135deg,#25f4ee,#2a7ce8)','linear-gradient(135deg,#fbbf24,#fe2c55)','linear-gradient(135deg,#34d399,#25f4ee)'];
+  const fmt = iso => {
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' · ' +
+           d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  };
+
+  // ================= navigation =================
+  function go(view) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + view).classList.add('active');
+    document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+    if (view === 'home') renderQueue();
+    if (view === 'calendar') renderCal();
+    window.scrollTo({ top: 0 });
+  }
+
+  // ================= home =================
+  function renderQueue() {
+    const upcoming = queue.slice().sort((a, b) => new Date(a.when) - new Date(b.when));
+    const sched = upcoming.filter(q => q.status === 'scheduled');
+    document.getElementById('kpi-sched').textContent = sched.length;
+    document.getElementById('kpi-next').textContent = sched.length ? 'Next: ' + fmt(sched[0].when) : 'Nothing queued';
+    const body = document.getElementById('queue-body');
+    body.innerHTML = upcoming.map(q => `
+      <tr>
+        <td style="white-space:nowrap;"><span class="thumb" style="background:${q.grad}"></span>${q.file}</td>
+        <td>${escapeHtml(q.cap)} <span style="color:#25f4ee;">${escapeHtml(q.tags)}</span></td>
+        <td style="white-space:nowrap;">${fmt(q.when)}</td>
+        <td>${q.status === 'published' ? '<span class="badge badge-live">Published</span>' : '<span class="badge badge-sched">Scheduled</span>'}</td>
+        <td>${q.status === 'scheduled' ? `<button class="row-del" title="Cancel post" onclick="removePost(${q.id})">✕</button>` : ''}</td>
+      </tr>`).join('');
+    document.getElementById('queue-empty').style.display = upcoming.length ? 'none' : 'block';
+    const h = new Date().getHours();
+    document.getElementById('greeting').textContent = (h < 11 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + ' 👋';
+    document.getElementById('home-sub').textContent = sched.length ? `You have ${sched.length} post${sched.length > 1 ? 's' : ''} scheduled.` : "Here's what's coming up on your account.";
+  }
+  function removePost(id) {
+    queue = queue.filter(q => q.id !== id);
+    save(); renderQueue();
+    toast('🗑️ Scheduled post cancelled');
+  }
+  function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // ================= calendar =================
+  let calBase = new Date();
+  function calShift(n) { calBase.setMonth(calBase.getMonth() + n); renderCal(); }
+  function calToday() { calBase = new Date(); renderCal(); }
+  function renderCal() {
+    const y = calBase.getFullYear(), m = calBase.getMonth();
+    document.getElementById('cal-month').textContent = calBase.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const first = new Date(y, m, 1);
+    const start = new Date(first); start.setDate(1 - first.getDay());
+    const today = new Date(); today.setHours(0,0,0,0);
+    let html = ['S','M','T','W','T','F','S'].map(d => `<div class="dow">${d}</div>`).join('');
+    for (let i = 0; i < 42; i++) {
+      const d = new Date(start); d.setDate(start.getDate() + i);
+      const inMonth = d.getMonth() === m;
+      const isToday = d.getTime() === today.getTime();
+      const posts = queue.filter(q => { const w = new Date(q.when); return w.getFullYear() === d.getFullYear() && w.getMonth() === d.getMonth() && w.getDate() === d.getDate(); });
+      html += `<div class="cal-cell${inMonth ? '' : ' other'}${isToday ? ' today' : ''}">
+        <div class="d">${d.getDate()}</div>
+        ${posts.map(p => `<div class="chip ${p.status === 'published' ? 'chip-green' : 'chip-pink'}" title="${escapeHtml(p.cap)}">${p.status === 'published' ? '✓ ' : ''}${new Date(p.when).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false})} ${escapeHtml(p.file.replace('.mp4',''))}</div>`).join('')}
+      </div>`;
+    }
+    document.getElementById('cal-grid').innerHTML = html;
+  }
+
+  // ================= composer =================
+  let pickedFile = null;
+  function pickFile() {
+    pickedFile = 'my_video_' + String(Math.floor(Math.random() * 90) + 10) + '.mp4';
+    const el = document.getElementById('drop');
+    el.classList.add('done');
+    el.innerHTML = '✅ &nbsp; ' + pickedFile + ' selected (' + (Math.random() * 60 + 20).toFixed(1) + ' MB)';
+  }
+  function useBestTime() {
+    const d = new Date();
+    const add = (2 - d.getDay() + 7) % 7 || 7; // next Tuesday
+    d.setDate(d.getDate() + add); d.setHours(22, 0, 0, 0);
+    const pad = n => String(n).padStart(2, '0');
+    document.getElementById('f-when').value =
+      `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    syncPreview();
+    toast('⚡ Best time applied: ' + fmt(d.toISOString()));
+  }
+  function syncPreview() {
+    const cap = document.getElementById('f-caption').value;
+    document.getElementById('cap-count').textContent = cap.length;
+    document.getElementById('pv-cap').textContent = cap || 'Your caption preview appears here…';
+    document.getElementById('pv-tags').textContent = document.getElementById('f-tags').value;
+    const when = document.getElementById('f-when').value;
+    document.getElementById('pv-time').textContent = when ? '⏰ ' + fmt(new Date(when).toISOString()) : '⏰ Not set';
+  }
+  function submitPost() {
+    const cap = document.getElementById('f-caption').value.trim();
+    const when = document.getElementById('f-when').value;
+    if (!pickedFile) { toast('🎬 Select a video first', true); return; }
+    if (!when) { toast('🗓️ Pick a date & time', true); return; }
+    queue.push({
+      id: Date.now(), file: pickedFile, cap: cap || '(no caption)',
+      tags: document.getElementById('f-tags').value.trim(),
+      when: new Date(when).toISOString(),
+      privacy: document.getElementById('f-privacy').value,
+      status: 'scheduled', grad: GRADS[Math.floor(Math.random() * GRADS.length)],
+    });
+    save();
+    // reset form
+    pickedFile = null;
+    const drop = document.getElementById('drop');
+    drop.classList.remove('done');
+    drop.innerHTML = '🎬 &nbsp; Click to select a video &nbsp;·&nbsp; MP4, MOV — up to 500MB';
+    document.getElementById('f-caption').value = '';
+    document.getElementById('f-tags').value = '';
+    document.getElementById('f-when').value = '';
+    syncPreview();
+    toast('✅ Post scheduled!');
+    setTimeout(() => go('home'), 700);
+  }
+
+  // ================= settings =================
+  function disconnect() { toast('🔌 Demo: in the live app this revokes the OAuth token'); }
+  function clearData() { queue = seed(); save(); renderQueue(); toast('🧹 Local demo data reset'); }
+
+  // ================= toast =================
+  let toastTimer;
+  function toast(msg, warn) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.borderColor = warn ? 'rgba(251,191,36,.5)' : 'rgba(52,211,153,.4)';
+    t.style.color = warn ? 'var(--yellow)' : 'var(--green)';
+    t.style.display = 'block';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.style.display = 'none'; }, 2800);
+  }
+
+  renderQueue();
+</script>
+</body>
+</html>
