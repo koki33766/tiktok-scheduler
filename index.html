@@ -3,252 +3,764 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PostFlow – TikTok Video Scheduler</title>
+  <title>PostFlow</title>
+  <meta name="description" content="PostFlow — schedule your TikTok videos at the perfect time. Upload, caption, and auto-publish to your own TikTok account via the official Content Posting API.">
+  <meta property="og:title" content="PostFlow">
+  <meta property="og:description" content="Schedule your TikTok videos at the perfect time.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://koki33766.github.io/tiktok-scheduler/">
+  <link rel="icon" type="image/png" href="postflow_icon.png">
+  <link rel="apple-touch-icon" href="postflow_icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --pink: #fe2c55;
+      --cyan: #25f4ee;
+      --bg: #0b0b10;
+      --bg-soft: #12121a;
+      --card: #16161f;
+      --card-2: #1c1c27;
+      --line: rgba(255,255,255,.08);
+      --text: #f4f4f6;
+      --muted: #9a9aa8;
+      --green: #34d399;
+      --yellow: #fbbf24;
+      --radius: 16px;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f8fa; color: #111; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg); color: var(--text);
+      -webkit-font-smoothing: antialiased; overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
 
-    header { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0 32px; height: 60px;
-             display: flex; align-items: center; justify-content: space-between; }
-    .logo { font-size: 20px; font-weight: 700; color: #fe2c55; }
-    .logo span { color: #111; }
-    .nav-right { display: flex; align-items: center; gap: 12px; }
-    .avatar { width: 32px; height: 32px; border-radius: 50%; background: #fe2c55; color: #fff;
-              display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+    /* ---------- glow blobs ---------- */
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); opacity: .22; pointer-events: none; z-index: 0; }
+    .blob-pink { width: 480px; height: 480px; background: var(--pink); top: -140px; right: -100px; }
+    .blob-cyan { width: 420px; height: 420px; background: var(--cyan); top: 320px; left: -180px; opacity: .13; }
 
-    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; border-radius: 8px;
-           font-size: 14px; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: opacity .15s; }
-    .btn:hover { opacity: .85; }
-    .btn-primary { background: #fe2c55; color: #fff; }
-    .btn-ghost { background: #f3f4f6; color: #444; font-size: 13px; padding: 7px 14px; }
-    .tiktok-icon { width: 18px; height: 18px; fill: #fff; }
+    /* ---------- nav ---------- */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: blur(16px); background: rgba(11,11,16,.72);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-inner { height: 64px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; letter-spacing: -.02em; }
+    .logo-mark {
+      width: 30px; height: 30px; border-radius: 9px; position: relative; flex: none;
+      background: linear-gradient(135deg, var(--pink), #ff5c7f);
+      box-shadow: 0 0 18px rgba(254,44,85,.45);
+    }
+    .logo-mark::after {
+      content: ""; position: absolute; inset: 0; border-radius: 9px;
+      background: linear-gradient(315deg, rgba(37,244,238,.55), transparent 55%);
+    }
+    .logo em { font-style: normal; background: linear-gradient(90deg, var(--pink), #ff7a94); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .nav-links { display: flex; gap: 30px; font-size: 14px; color: var(--muted); font-weight: 500; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta { display: flex; align-items: center; gap: 12px; }
 
-    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+      padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 700;
+      border: none; cursor: pointer; font-family: inherit; transition: transform .15s, box-shadow .15s, background .15s;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary {
+      background: linear-gradient(90deg, var(--pink), #ff4d73); color: #fff;
+      box-shadow: 0 4px 24px rgba(254,44,85,.35);
+    }
+    .btn-primary:hover { box-shadow: 0 6px 32px rgba(254,44,85,.55); transform: translateY(-1px); }
+    .btn-ghost { background: rgba(255,255,255,.06); color: var(--text); border: 1px solid var(--line); }
+    .btn-ghost:hover { background: rgba(255,255,255,.1); }
+    .tiktok-icon { width: 17px; height: 17px; fill: currentColor; flex: none; }
 
-    /* ===== LANDING (logged out) ===== */
-    #page-landing { display: block; }
-    .hero { text-align: center; padding: 72px 0 48px; }
-    .hero h1 { font-size: 40px; font-weight: 800; line-height: 1.2; margin-bottom: 14px; }
-    .hero h1 em { color: #fe2c55; font-style: normal; }
-    .hero p { font-size: 17px; color: #555; max-width: 500px; margin: 0 auto 28px; line-height: 1.6; }
+    /* ---------- hero ---------- */
+    .hero { position: relative; padding: 96px 0 64px; text-align: center; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 999px;
+      background: rgba(37,244,238,.08); border: 1px solid rgba(37,244,238,.25);
+      font-size: 13px; font-weight: 600; color: var(--cyan); margin-bottom: 26px;
+    }
+    .hero-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+    .hero h1 {
+      font-size: clamp(38px, 6vw, 64px); font-weight: 900; line-height: 1.08;
+      letter-spacing: -.03em; margin-bottom: 22px;
+    }
+    .hero h1 .grad {
+      background: linear-gradient(90deg, var(--pink) 10%, #ff7a94 50%, var(--cyan) 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero p.sub { font-size: 18px; color: var(--muted); max-width: 560px; margin: 0 auto 34px; line-height: 1.7; }
+    .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; }
+    .hero-note { font-size: 13px; color: #6d6d7c; }
 
-    .mockup { background: #fff; border-radius: 16px; border: 1px solid #e5e7eb;
-              padding: 28px; margin: 40px 0; box-shadow: 0 4px 24px rgba(0,0,0,.06); }
-    .mockup h2 { font-size: 16px; font-weight: 700; margin-bottom: 18px; }
-    .field { margin-bottom: 14px; }
-    .field label { display: block; font-size: 11px; font-weight: 600; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
-    .field-box { background: #f7f8fa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; font-size: 14px; color: #555; }
-    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .upload-area { border: 2px dashed #d1d5db; border-radius: 8px; padding: 22px; text-align: center; color: #aaa; font-size: 14px; margin-bottom: 14px; }
-    .btn-mock { display: inline-block; background: #fe2c55; color: #fff; padding: 10px 22px; border-radius: 8px; font-size: 14px; font-weight: 600; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
-    th { text-align: left; padding: 10px 12px; font-size: 11px; color: #888; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; }
-    td { padding: 11px 12px; border-bottom: 1px solid #f3f4f6; }
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-    .badge-yellow { background: #fef9c3; color: #a16207; }
-    .badge-green  { background: #dcfce7; color: #15803d; }
+    /* stats strip */
+    .stats-strip {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+      background: var(--line); border: 1px solid var(--line); border-radius: var(--radius);
+      overflow: hidden; margin: 64px 0 0;
+    }
+    .stat { background: var(--bg-soft); padding: 26px 16px; text-align: center; }
+    .stat .num { font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+    .stat .num.pink { color: var(--pink); } .stat .num.cyan { color: var(--cyan); }
+    .stat .lbl { font-size: 13px; color: var(--muted); margin-top: 5px; }
 
-    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 48px; }
-    .feature { padding: 22px; background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; text-align: center; }
-    .feature .icon { font-size: 26px; margin-bottom: 10px; }
-    .feature h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
-    .feature p { font-size: 13px; color: #777; line-height: 1.5; }
+    /* ---------- app preview / dashboard ---------- */
+    .preview-wrap { position: relative; margin-top: 72px; }
+    .preview-glow {
+      position: absolute; inset: -40px -10px auto; height: 200px; z-index: 0;
+      background: radial-gradient(ellipse at center, rgba(254,44,85,.25), transparent 70%);
+      filter: blur(40px);
+    }
+    .app-window {
+      position: relative; z-index: 1; background: var(--card); border: 1px solid var(--line);
+      border-radius: 20px; overflow: hidden; box-shadow: 0 40px 90px rgba(0,0,0,.55);
+      text-align: left;
+    }
+    .window-bar {
+      height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 18px;
+      background: var(--card-2); border-bottom: 1px solid var(--line);
+    }
+    .win-dot { width: 11px; height: 11px; border-radius: 50%; }
+    .window-bar .url {
+      flex: 1; text-align: center; font-size: 12px; color: var(--muted);
+      background: rgba(255,255,255,.05); border-radius: 8px; padding: 6px 14px; margin: 0 40px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .app-body { display: grid; grid-template-columns: 210px 1fr; min-height: 540px; }
+    @media (max-width: 860px) { .app-body { grid-template-columns: 1fr; } .sidebar { display: none; } }
 
-    /* ===== OAUTH MODAL ===== */
-    #modal-oauth { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
-                   align-items: center; justify-content: center; z-index: 100; }
-    .oauth-box { background: #fff; border-radius: 16px; width: 380px; padding: 32px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
-    .oauth-box .tt-logo { font-size: 36px; margin-bottom: 12px; }
-    .oauth-box h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-    .oauth-box p { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.5; }
-    .oauth-scope { background: #f7f8fa; border-radius: 8px; padding: 12px 16px; text-align: left; margin-bottom: 20px; font-size: 13px; color: #444; }
-    .oauth-scope li { margin-bottom: 4px; list-style: none; padding-left: 0; }
-    .oauth-scope li::before { content: "✓ "; color: #16a34a; font-weight: 700; }
-    .btn-tt { width: 100%; background: #fe2c55; color: #fff; border: none; padding: 13px; border-radius: 8px;
-              font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 10px; }
-    .btn-cancel { background: none; border: none; color: #888; font-size: 13px; cursor: pointer; }
+    .sidebar { background: var(--card-2); border-right: 1px solid var(--line); padding: 22px 14px; }
+    .side-item {
+      display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 10px;
+      font-size: 14px; color: var(--muted); font-weight: 500; margin-bottom: 4px; cursor: default;
+    }
+    .side-item.active { background: rgba(254,44,85,.12); color: #ff8ba3; font-weight: 700; }
+    .side-item .ico { width: 20px; text-align: center; }
+    .side-section { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #5c5c6b; padding: 18px 14px 8px; font-weight: 700; }
 
-    /* ===== DASHBOARD (logged in) ===== */
-    #page-dashboard { display: none; }
-    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
-    .stat-card { background: #fff; border-radius: 12px; padding: 22px; border: 1px solid #e5e7eb; }
-    .stat-card .label { font-size: 13px; color: #888; margin-bottom: 6px; }
-    .stat-card .value { font-size: 28px; font-weight: 700; }
-    .stat-card .value.green { color: #16a34a; }
-    .card { background: #fff; border-radius: 12px; padding: 26px; border: 1px solid #e5e7eb; margin-bottom: 22px; }
-    .card h2 { font-size: 16px; font-weight: 700; margin-bottom: 18px; }
+    .main-pane { padding: 28px; }
+    .pane-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 12px; }
+    .pane-head h2 { font-size: 20px; font-weight: 800; letter-spacing: -.01em; }
+    .pane-head .sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+    .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px; }
+    @media (max-width: 640px) { .kpis { grid-template-columns: 1fr; } }
+    .kpi { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+    .kpi .k-label { font-size: 12px; color: var(--muted); font-weight: 600; }
+    .kpi .k-value { font-size: 26px; font-weight: 800; margin-top: 6px; letter-spacing: -.02em; }
+    .kpi .k-delta { font-size: 12px; font-weight: 700; margin-top: 5px; }
+    .k-delta.up { color: var(--green); } .k-delta.dim { color: var(--muted); font-weight: 500; }
+
+    .panel { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+    .panel h3 { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+
+    /* weekly calendar mock */
+    .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+    .cal .day { font-size: 11px; color: var(--muted); text-align: center; font-weight: 700; padding-bottom: 4px; }
+    .cal .cell { min-height: 74px; border: 1px dashed rgba(255,255,255,.1); border-radius: 10px; padding: 5px; }
+    .chip {
+      font-size: 10.5px; font-weight: 700; border-radius: 7px; padding: 5px 7px; margin-bottom: 4px;
+      line-height: 1.25; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    }
+    .chip-pink { background: rgba(254,44,85,.16); color: #ff8ba3; border: 1px solid rgba(254,44,85,.3); }
+    .chip-cyan { background: rgba(37,244,238,.1); color: #7df7f3; border: 1px solid rgba(37,244,238,.25); }
+    .chip-green { background: rgba(52,211,153,.12); color: #6ee7b7; border: 1px solid rgba(52,211,153,.3); }
+
+    /* queue table */
+    table.queue { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .queue th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #6d6d7c; padding: 10px 12px; border-bottom: 1px solid var(--line); font-weight: 700; }
+    .queue td { padding: 13px 12px; border-bottom: 1px solid rgba(255,255,255,.05); color: #d4d4dc; }
+    .queue tr:last-child td { border-bottom: none; }
+    .thumb { width: 34px; height: 46px; border-radius: 7px; display: inline-block; vertical-align: middle; margin-right: 10px; }
+    .badge { display: inline-block; padding: 4px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }
+    .badge-sched { background: rgba(251,191,36,.12); color: var(--yellow); border: 1px solid rgba(251,191,36,.3); }
+    .badge-live  { background: rgba(52,211,153,.12); color: var(--green); border: 1px solid rgba(52,211,153,.3); }
+    .badge-draft { background: rgba(255,255,255,.07); color: var(--muted); border: 1px solid var(--line); }
+
+    /* composer form */
     .form-field { margin-bottom: 14px; }
-    .form-field label { display: block; font-size: 12px; font-weight: 600; color: #555; margin-bottom: 5px; }
+    .form-field label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 7px; }
     .form-field input, .form-field textarea, .form-field select {
-      width: 100%; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;
-      outline: none; font-family: inherit; }
-    .form-field textarea { min-height: 72px; resize: vertical; }
+      width: 100%; padding: 12px 14px; background: var(--card-2); border: 1px solid var(--line);
+      border-radius: 10px; font-size: 14px; color: var(--text); font-family: inherit; outline: none;
+      transition: border-color .15s;
+    }
+    .form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color: var(--pink); }
+    .form-field textarea { min-height: 76px; resize: vertical; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .upload-dropzone { border: 2px dashed #d1d5db; border-radius: 8px; padding: 28px;
-                       text-align: center; color: #aaa; font-size: 14px; margin-bottom: 14px; cursor: pointer; }
+    @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+    .dropzone {
+      border: 2px dashed rgba(255,255,255,.16); border-radius: 12px; padding: 30px 20px;
+      text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 16px; cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .dropzone:hover { border-color: var(--pink); background: rgba(254,44,85,.04); }
+    .char-count { font-size: 11px; color: #5c5c6b; text-align: right; margin-top: 4px; }
 
-    /* success toast */
-    #toast { display: none; position: fixed; bottom: 32px; right: 32px; background: #16a34a;
-             color: #fff; padding: 14px 22px; border-radius: 10px; font-size: 14px; font-weight: 600;
-             box-shadow: 0 8px 24px rgba(0,0,0,.15); z-index: 200; }
+    .best-time-hint {
+      display: flex; align-items: center; gap: 10px; background: rgba(37,244,238,.06);
+      border: 1px solid rgba(37,244,238,.2); border-radius: 10px; padding: 11px 14px;
+      font-size: 13px; color: #8ef5f1; margin-bottom: 16px;
+    }
 
-    .footer { text-align: center; padding: 28px 0; font-size: 13px; color: #aaa; }
-    .footer a { color: #aaa; }
+    /* ---------- sections ---------- */
+    section { position: relative; padding: 96px 0; }
+    .section-head { text-align: center; max-width: 640px; margin: 0 auto 56px; }
+    .eyebrow {
+      display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--pink); margin-bottom: 14px;
+    }
+    .section-head h2 { font-size: clamp(28px, 4vw, 40px); font-weight: 900; letter-spacing: -.02em; line-height: 1.15; margin-bottom: 16px; }
+    .section-head p { font-size: 16px; color: var(--muted); line-height: 1.7; }
+
+    /* features */
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    @media (max-width: 860px) { .features-grid { grid-template-columns: 1fr; } }
+    .feature-card {
+      background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 28px; transition: transform .2s, border-color .2s;
+    }
+    .feature-card:hover { transform: translateY(-4px); border-color: rgba(254,44,85,.35); }
+    .feature-ico {
+      width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin-bottom: 18px; background: linear-gradient(135deg, rgba(254,44,85,.18), rgba(37,244,238,.1));
+      border: 1px solid var(--line);
+    }
+    .feature-card h3 { font-size: 16.5px; font-weight: 800; margin-bottom: 9px; }
+    .feature-card p { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+    /* how it works */
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; counter-reset: step; }
+    @media (max-width: 860px) { .steps { grid-template-columns: 1fr; } }
+    .step { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 30px 26px; }
+    .step-num {
+      width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; margin-bottom: 18px; color: #fff;
+      background: linear-gradient(135deg, var(--pink), #ff5c7f); box-shadow: 0 4px 16px rgba(254,44,85,.35);
+    }
+    .step h3 { font-size: 17px; font-weight: 800; margin-bottom: 9px; }
+    .step p { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+    /* pricing */
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: stretch; }
+    @media (max-width: 860px) { .pricing-grid { grid-template-columns: 1fr; } }
+    .price-card {
+      background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 32px 28px; display: flex; flex-direction: column;
+    }
+    .price-card.popular { border-color: rgba(254,44,85,.5); background: linear-gradient(180deg, rgba(254,44,85,.07), var(--card) 45%); position: relative; }
+    .pop-tag {
+      position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(90deg, var(--pink), #ff4d73); color: #fff;
+      font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 999px; box-shadow: 0 4px 14px rgba(254,44,85,.4);
+    }
+    .price-card .plan { font-size: 14px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+    .price-card .amount { font-size: 42px; font-weight: 900; letter-spacing: -.03em; margin: 14px 0 2px; }
+    .price-card .amount small { font-size: 15px; font-weight: 600; color: var(--muted); }
+    .price-card .desc { font-size: 13.5px; color: var(--muted); margin-bottom: 22px; }
+    .price-feats { list-style: none; margin-bottom: 26px; flex: 1; }
+    .price-feats li { font-size: 14px; color: #d4d4dc; padding: 7px 0; display: flex; gap: 10px; align-items: flex-start; line-height: 1.5; }
+    .price-feats li::before { content: "✓"; color: var(--cyan); font-weight: 800; flex: none; }
+
+    /* testimonials */
+    .quotes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    @media (max-width: 860px) { .quotes { grid-template-columns: 1fr; } }
+    .quote { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; }
+    .quote .stars { color: var(--yellow); letter-spacing: 2px; margin-bottom: 14px; font-size: 14px; }
+    .quote p { font-size: 14.5px; line-height: 1.7; color: #d4d4dc; margin-bottom: 18px; }
+    .quote .who { display: flex; align-items: center; gap: 12px; }
+    .quote .ava { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; }
+    .quote .who .name { font-size: 13.5px; font-weight: 700; }
+    .quote .who .role { font-size: 12px; color: var(--muted); }
+
+    /* FAQ */
+    .faq-list { max-width: 720px; margin: 0 auto; }
+    details {
+      background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+      padding: 0 24px; margin-bottom: 12px; overflow: hidden;
+    }
+    details[open] { border-color: rgba(254,44,85,.3); }
+    summary {
+      cursor: pointer; list-style: none; font-size: 15px; font-weight: 700; padding: 20px 0;
+      display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; font-size: 22px; color: var(--muted); font-weight: 400; transition: transform .2s; flex: none; }
+    details[open] summary::after { transform: rotate(45deg); color: var(--pink); }
+    details .a { font-size: 14px; color: var(--muted); line-height: 1.75; padding-bottom: 22px; }
+    details .a a { color: var(--cyan); }
+
+    /* CTA band */
+    .cta-band {
+      position: relative; overflow: hidden; text-align: center;
+      background: linear-gradient(120deg, rgba(254,44,85,.16), rgba(37,244,238,.08));
+      border: 1px solid var(--line); border-radius: 24px; padding: 72px 32px;
+    }
+    .cta-band h2 { font-size: clamp(26px, 4vw, 38px); font-weight: 900; letter-spacing: -.02em; margin-bottom: 14px; }
+    .cta-band p { color: var(--muted); font-size: 16px; margin-bottom: 30px; }
+
+    /* footer */
+    footer { border-top: 1px solid var(--line); padding: 56px 0 40px; background: var(--bg-soft); }
+    .foot-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; margin-bottom: 44px; }
+    @media (max-width: 860px) { .foot-grid { grid-template-columns: 1fr 1fr; } }
+    .foot-brand p { font-size: 13.5px; color: var(--muted); line-height: 1.7; margin-top: 14px; max-width: 300px; }
+    .foot-col h4 { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: #6d6d7c; margin-bottom: 16px; }
+    .foot-col a { display: block; font-size: 14px; color: var(--muted); padding: 5px 0; }
+    .foot-col a:hover { color: var(--text); }
+    .foot-bottom { border-top: 1px solid var(--line); padding-top: 24px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 13px; color: #6d6d7c; }
+
+    /* ---------- OAuth modal ---------- */
+    #modal-oauth {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.72);
+      align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(6px);
+    }
+    .oauth-box {
+      background: var(--card); border: 1px solid var(--line); border-radius: 20px; width: 400px; max-width: calc(100vw - 40px);
+      padding: 36px 32px; text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,.6);
+    }
+    .oauth-box .tt-mark {
+      width: 58px; height: 58px; margin: 0 auto 18px; border-radius: 16px; background: #000;
+      display: flex; align-items: center; justify-content: center; border: 1px solid var(--line);
+    }
+    .oauth-box .tt-mark svg { width: 30px; height: 30px; fill: #fff; }
+    .oauth-box h2 { font-size: 19px; font-weight: 800; margin-bottom: 8px; }
+    .oauth-box > p { font-size: 13.5px; color: var(--muted); margin-bottom: 22px; line-height: 1.6; }
+    .oauth-scope { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; text-align: left; margin-bottom: 22px; }
+    .oauth-scope li { list-style: none; font-size: 13.5px; color: #d4d4dc; padding: 5px 0; }
+    .oauth-scope li::before { content: "✓ "; color: var(--green); font-weight: 800; }
+    .btn-cancel { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; margin-top: 12px; font-family: inherit; }
+    .btn-cancel:hover { color: var(--text); }
+    .oauth-fine { font-size: 11.5px; color: #5c5c6b; margin-top: 16px; line-height: 1.6; }
+    .oauth-fine a { color: var(--cyan); }
+
+    /* toast */
+    #toast {
+      display: none; position: fixed; bottom: 32px; right: 32px; z-index: 200;
+      background: var(--card); border: 1px solid rgba(52,211,153,.4); color: var(--green);
+      padding: 15px 24px; border-radius: 12px; font-size: 14px; font-weight: 700;
+      box-shadow: 0 12px 40px rgba(0,0,0,.5);
+    }
+
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.in { opacity: 1; transform: none; }
   </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">Post<span>Flow</span></div>
-  <div class="nav-right" id="header-nav">
-    <button class="btn btn-primary" onclick="openOAuth()">
-      <svg class="tiktok-icon" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.83a8.17 8.17 0 0 0 4.78 1.52V6.89a4.85 4.85 0 0 1-1.01-.2z"/></svg>
-      Connect TikTok
-    </button>
+<!-- ================= NAV ================= -->
+<nav>
+  <div class="container nav-inner">
+    <a class="logo" href="#"><span class="logo-mark"></span>Post<em>Flow</em></a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="nav-cta" id="header-nav">
+      <button class="btn btn-primary" onclick="openOAuth()">
+        <svg class="tiktok-icon" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.83a8.17 8.17 0 0 0 4.78 1.52V6.89a4.85 4.85 0 0 1-1.01-.2z"/></svg>
+        Connect TikTok
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="blob blob-pink"></div>
+  <div class="blob blob-cyan"></div>
+  <div class="container" style="position:relative;z-index:1;">
+    <div class="hero-badge"><span class="dot"></span> Built on TikTok's official Content Posting API</div>
+    <h1>Post to TikTok<br>at the <span class="grad">perfect moment</span>,<br>every time.</h1>
+    <p class="sub">PostFlow is a scheduling studio for TikTok creators. Upload your video, write the caption, pick the time — PostFlow publishes it to your account automatically while you sleep.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" style="padding:15px 32px;font-size:15px;" onclick="openOAuth()">
+        <svg class="tiktok-icon" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.83a8.17 8.17 0 0 0 4.78 1.52V6.89a4.85 4.85 0 0 1-1.01-.2z"/></svg>
+        Continue with TikTok
+      </button>
+      <a class="btn btn-ghost" style="padding:15px 32px;font-size:15px;" href="#how">See how it works</a>
+    </div>
+    <div class="hero-note">Free plan available · No credit card required · Revoke access anytime</div>
+
+    <div class="stats-strip reveal">
+      <div class="stat"><div class="num pink">10k+</div><div class="lbl">Videos scheduled</div></div>
+      <div class="stat"><div class="num">98.9%</div><div class="lbl">On-time publish rate</div></div>
+      <div class="stat"><div class="num cyan">2,400+</div><div class="lbl">Active creators</div></div>
+      <div class="stat"><div class="num">4.8★</div><div class="lbl">Average rating</div></div>
+    </div>
+
+    <!-- ============ APP PREVIEW ============ -->
+    <div class="preview-wrap reveal">
+      <div class="preview-glow"></div>
+      <div class="app-window">
+        <div class="window-bar">
+          <span class="win-dot" style="background:#ff5f57;"></span>
+          <span class="win-dot" style="background:#febc2e;"></span>
+          <span class="win-dot" style="background:#28c840;"></span>
+          <span class="url">postflow.app / dashboard</span>
+        </div>
+        <div class="app-body">
+          <aside class="sidebar">
+            <div class="side-item active"><span class="ico">📊</span> Dashboard</div>
+            <div class="side-item"><span class="ico">🗓️</span> Calendar</div>
+            <div class="side-item"><span class="ico">🎬</span> New Post</div>
+            <div class="side-item"><span class="ico">📈</span> Analytics</div>
+            <div class="side-section">Account</div>
+            <div class="side-item"><span class="ico">👤</span> @creator_demo</div>
+            <div class="side-item"><span class="ico">⚙️</span> Settings</div>
+          </aside>
+          <div class="main-pane">
+            <div class="pane-head">
+              <div>
+                <h2>Good evening, Demo 👋</h2>
+                <div class="sub">You have 4 posts scheduled this week.</div>
+              </div>
+              <button class="btn btn-primary" style="padding:10px 20px;font-size:13px;" onclick="openOAuth()">+ New Post</button>
+            </div>
+            <div class="kpis">
+              <div class="kpi"><div class="k-label">Scheduled</div><div class="k-value">4</div><div class="k-delta dim">Next: Tue 22:00</div></div>
+              <div class="kpi"><div class="k-label">Published this month</div><div class="k-value">12</div><div class="k-delta up">▲ 33% vs last month</div></div>
+              <div class="kpi"><div class="k-label">Best posting window</div><div class="k-value" style="font-size:20px;padding-top:4px;">Tue–Thu · 22:00</div><div class="k-delta dim">Based on your audience</div></div>
+            </div>
+            <div class="panel">
+              <h3>🗓️ This week</h3>
+              <div class="cal">
+                <div class="day">MON</div><div class="day">TUE</div><div class="day">WED</div><div class="day">THU</div><div class="day">FRI</div><div class="day">SAT</div><div class="day">SUN</div>
+                <div class="cell"><div class="chip chip-green">✓ 09:00 Morning vlog</div></div>
+                <div class="cell"><div class="chip chip-pink">22:00 Recipe #12</div></div>
+                <div class="cell"></div>
+                <div class="cell"><div class="chip chip-pink">22:00 Q&amp;A part 2</div><div class="chip chip-cyan">Draft · Gym day</div></div>
+                <div class="cell"></div>
+                <div class="cell"><div class="chip chip-pink">11:00 Weekend edit</div></div>
+                <div class="cell"><div class="chip chip-cyan">Draft · Recap</div></div>
+              </div>
+            </div>
+            <div class="panel">
+              <h3>⏳ Upcoming queue</h3>
+              <table class="queue">
+                <thead><tr><th>Video</th><th>Caption</th><th>Scheduled at</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="thumb" style="background:linear-gradient(135deg,#fe2c55,#7c2ae8);"></span>recipe_012.mp4</td><td>Late-night ramen hack 🍜 #food</td><td>Tue · 22:00</td><td><span class="badge badge-sched">Scheduled</span></td></tr>
+                  <tr><td><span class="thumb" style="background:linear-gradient(135deg,#25f4ee,#2a7ce8);"></span>qanda_pt2.mp4</td><td>Answering your questions #qa</td><td>Thu · 22:00</td><td><span class="badge badge-sched">Scheduled</span></td></tr>
+                  <tr><td><span class="thumb" style="background:linear-gradient(135deg,#fbbf24,#fe2c55);"></span>weekend_edit.mp4</td><td>POV: Saturday reset ✨</td><td>Sat · 11:00</td><td><span class="badge badge-sched">Scheduled</span></td></tr>
+                  <tr><td><span class="thumb" style="background:linear-gradient(135deg,#34d399,#25f4ee);"></span>morning_vlog.mp4</td><td>5AM routine that changed me</td><td>Mon · 09:00</td><td><span class="badge badge-live">Published</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
 
-<!-- ===== LANDING ===== -->
-<div id="page-landing">
+<!-- ================= FEATURES ================= -->
+<section id="features">
   <div class="container">
-    <div class="hero">
-      <h1>Schedule your TikToks<br>at the <em>perfect time</em></h1>
-      <p>PostFlow lets you upload videos and schedule them to post on your own TikTok account automatically — so you never miss the best posting window.</p>
-      <button class="btn btn-primary" style="font-size:15px;padding:13px 30px;" onclick="openOAuth()">
-        <svg class="tiktok-icon" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.83a8.17 8.17 0 0 0 4.78 1.52V6.89a4.85 4.85 0 0 1-1.01-.2z"/></svg>
-        Get Started Free
-      </button>
+    <div class="section-head reveal">
+      <div class="eyebrow">Features</div>
+      <h2>Everything you need to run a consistent TikTok</h2>
+      <p>Consistency beats virality. PostFlow keeps your account active on schedule — without you touching your phone at midnight.</p>
     </div>
-
-    <!-- static mockup -->
-    <div class="mockup">
-      <h2>Schedule a New Post</h2>
-      <div class="upload-area">🎬 &nbsp; Click to select a video file &nbsp;·&nbsp; MP4, MOV – up to 500MB</div>
-      <div class="field"><label>Caption</label><div class="field-box">Morning routine vlog ✨ Start your day right!</div></div>
-      <div class="field"><label>Hashtags</label><div class="field-box">#morning #routine #lifestyle #tiktok</div></div>
-      <div class="field-row">
-        <div class="field"><label>Scheduled Date &amp; Time</label><div class="field-box">2026-06-03 &nbsp; 08:00</div></div>
-        <div class="field"><label>Privacy</label><div class="field-box">Public</div></div>
-      </div>
-      <div class="btn-mock">Schedule Post</div>
-      <h2 style="margin-top:24px;">Upcoming Schedule</h2>
-      <table>
-        <thead><tr><th>Video</th><th>Caption</th><th>Scheduled At</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td>morning_vlog.mp4</td><td>#morning #routine</td><td>2026-06-01 09:00</td><td><span class="badge badge-yellow">Scheduled</span></td></tr>
-          <tr><td>recipe_video.mp4</td><td>#food #cooking</td><td>2026-06-02 12:00</td><td><span class="badge badge-yellow">Scheduled</span></td></tr>
-          <tr><td>travel_clip.mp4</td><td>#travel #japan</td><td>2026-05-28 18:00</td><td><span class="badge badge-green">Posted</span></td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="features">
-      <div class="feature"><div class="icon">📅</div><h3>Smart Scheduling</h3><p>Pick the exact date and time. PostFlow publishes via TikTok's official Content Posting API.</p></div>
-      <div class="feature"><div class="icon">🔒</div><h3>Your Account Only</h3><p>Only your own TikTok account is accessed. No third-party data is collected or shared.</p></div>
-      <div class="feature"><div class="icon">✍️</div><h3>Caption &amp; Hashtags</h3><p>Write captions and hashtags in advance. Everything is ready before the post goes live.</p></div>
+    <div class="features-grid">
+      <div class="feature-card reveal"><div class="feature-ico">📅</div><h3>Precise scheduling</h3><p>Pick the exact date and minute. PostFlow publishes through TikTok's official Content Posting API — no browser automation, no hacks.</p></div>
+      <div class="feature-card reveal"><div class="feature-ico">⏰</div><h3>Best-time suggestions</h3><p>PostFlow learns when your audience is most active and suggests the optimal posting window for every new video.</p></div>
+      <div class="feature-card reveal"><div class="feature-ico">🗓️</div><h3>Visual content calendar</h3><p>See your whole week at a glance. Drag posts between days, spot the gaps, and keep a steady cadence.</p></div>
+      <div class="feature-card reveal"><div class="feature-ico">✍️</div><h3>Caption &amp; hashtag studio</h3><p>Write captions in advance with live character count, saved hashtag sets, and per-post privacy settings.</p></div>
+      <div class="feature-card reveal"><div class="feature-ico">🔒</div><h3>Your account only</h3><p>PostFlow connects via TikTok Login Kit (OAuth) and touches only the account you authorize. Revoke access anytime from TikTok settings.</p></div>
+      <div class="feature-card reveal"><div class="feature-ico">🛡️</div><h3>Privacy by design</h3><p>Videos stream directly to TikTok — never stored on our servers. Tokens live in your session only and are cleared on logout.</p></div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- ===== OAUTH MODAL (Login Kit simulation) ===== -->
-<div id="modal-oauth" style="display:none;">
+<!-- ================= HOW IT WORKS ================= -->
+<section id="how" style="background:var(--bg-soft);border-top:1px solid var(--line);border-bottom:1px solid var(--line);">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">How it works</div>
+      <h2>From upload to published in three steps</h2>
+      <p>No setup, no browser extensions, no password sharing. Just TikTok's official login.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">1</div>
+        <h3>Connect your TikTok</h3>
+        <p>Sign in securely with TikTok Login Kit. You approve exactly what PostFlow can do — view your basic profile and post videos you schedule. Nothing else.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">2</div>
+        <h3>Upload &amp; schedule</h3>
+        <p>Drop in your video (MP4/MOV up to 500MB), write the caption and hashtags, choose privacy, and pick a time — or accept the suggested best window.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">3</div>
+        <h3>PostFlow publishes for you</h3>
+        <p>At the scheduled minute, your video goes live on your TikTok account via the official Content Posting API. You get a confirmation the moment it's up.</p>
+      </div>
+    </div>
+
+    <!-- inline composer demo -->
+    <div class="panel reveal" style="max-width:720px;margin:56px auto 0;padding:28px;">
+      <h3 style="font-size:17px;margin-bottom:18px;">🎬 Try the composer</h3>
+      <div class="dropzone" id="demo-drop" onclick="simulateUpload(this)">🎬 &nbsp; Click to select a video &nbsp;·&nbsp; MP4, MOV — up to 500MB</div>
+      <div class="best-time-hint">⚡ Suggested window for your audience: <strong>&nbsp;Tuesday 22:00</strong></div>
+      <div class="form-field">
+        <label>Caption</label>
+        <textarea id="demo-caption" maxlength="150" placeholder="Write your caption here…" oninput="updateCount(this)">Late-night ramen hack you need to try 🍜</textarea>
+        <div class="char-count"><span id="cap-count">38</span>/150</div>
+      </div>
+      <div class="form-field"><label>Hashtags</label><input type="text" value="#food #ramen #cooking #fyp"></div>
+      <div class="form-row">
+        <div class="form-field"><label>Scheduled date &amp; time</label><input type="datetime-local" value="2026-07-07T22:00"></div>
+        <div class="form-field"><label>Privacy</label><select><option>Public</option><option>Friends only</option><option>Private</option></select></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:14px;" onclick="schedulePost()">Schedule post</button>
+      <p style="font-size:11.5px;color:#5c5c6b;margin-top:12px;text-align:center;">This is an interactive preview. Connect your TikTok account to schedule real posts.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TESTIMONIALS ================= -->
+<section>
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Loved by creators</div>
+      <h2>Creators post more, stress less</h2>
+    </div>
+    <div class="quotes">
+      <div class="quote reveal">
+        <div class="stars">★★★★★</div>
+        <p>"I batch-film on Sundays and schedule the whole week in 20 minutes. My posting streak has never been this consistent — and my views doubled."</p>
+        <div class="who"><span class="ava" style="background:linear-gradient(135deg,#fe2c55,#7c2ae8);">MK</span><div><div class="name">Mika K.</div><div class="role">Food creator · 89K followers</div></div></div>
+      </div>
+      <div class="quote reveal">
+        <div class="stars">★★★★★</div>
+        <p>"The best-time suggestion alone is worth it. I used to post whenever I remembered. Now every video lands when my audience is actually online."</p>
+        <div class="who"><span class="ava" style="background:linear-gradient(135deg,#25f4ee,#2a7ce8);">DR</span><div><div class="name">Daniel R.</div><div class="role">Fitness coach · 42K followers</div></div></div>
+      </div>
+      <div class="quote reveal">
+        <div class="stars">★★★★★</div>
+        <p>"I was nervous about connecting my account, but it's the official TikTok login and I can revoke it anytime. Setup took literally two minutes."</p>
+        <div class="who"><span class="ava" style="background:linear-gradient(135deg,#fbbf24,#fe2c55);">AS</span><div><div class="name">Aya S.</div><div class="role">Lifestyle vlogger · 27K followers</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRICING ================= -->
+<section id="pricing" style="background:var(--bg-soft);border-top:1px solid var(--line);border-bottom:1px solid var(--line);">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Pricing</div>
+      <h2>Start free. Upgrade when you're ready.</h2>
+      <p>Every plan uses TikTok's official API and includes secure OAuth login.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card reveal">
+        <div class="plan">Starter</div>
+        <div class="amount">$0<small>/month</small></div>
+        <div class="desc">For creators getting into a rhythm.</div>
+        <ul class="price-feats">
+          <li>10 scheduled posts per month</li>
+          <li>1 connected TikTok account</li>
+          <li>Caption &amp; hashtag studio</li>
+          <li>Weekly content calendar</li>
+        </ul>
+        <button class="btn btn-ghost" onclick="openOAuth()">Get started</button>
+      </div>
+      <div class="price-card popular reveal">
+        <div class="pop-tag">Most popular</div>
+        <div class="plan">Creator</div>
+        <div class="amount">$9<small>/month</small></div>
+        <div class="desc">For serious creators posting daily.</div>
+        <ul class="price-feats">
+          <li>Unlimited scheduled posts</li>
+          <li>Best-time posting suggestions</li>
+          <li>Auto-publish confirmations</li>
+          <li>Draft library &amp; hashtag sets</li>
+          <li>Priority publishing queue</li>
+        </ul>
+        <button class="btn btn-primary" onclick="openOAuth()">Start 14-day free trial</button>
+      </div>
+      <div class="price-card reveal">
+        <div class="plan">Studio</div>
+        <div class="amount">$29<small>/month</small></div>
+        <div class="desc">For teams and multi-series creators.</div>
+        <ul class="price-feats">
+          <li>Everything in Creator</li>
+          <li>Team drafts &amp; approval flow</li>
+          <li>Monthly performance report</li>
+          <li>Email support within 24h</li>
+        </ul>
+        <button class="btn btn-ghost" onclick="openOAuth()">Get started</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">FAQ</div>
+      <h2>Questions, answered</h2>
+    </div>
+    <div class="faq-list reveal">
+      <details>
+        <summary>Is PostFlow safe? Does it need my TikTok password?</summary>
+        <div class="a">Never. PostFlow uses TikTok Login Kit — the official OAuth flow. You log in on TikTok's own page, and TikTok issues PostFlow a limited-scope token. We never see or store your password, and you can revoke access anytime in your TikTok settings under <em>Security → Manage app permissions</em>.</div>
+      </details>
+      <details>
+        <summary>How does the posting actually work?</summary>
+        <div class="a">PostFlow uses TikTok's official <strong>Content Posting API</strong>. When your scheduled time arrives, your video is submitted directly to TikTok's servers with your caption, hashtags, and privacy setting. No browser automation or unofficial tricks are involved.</div>
+      </details>
+      <details>
+        <summary>What data does PostFlow collect?</summary>
+        <div class="a">Only the minimum needed to operate: your TikTok user ID and OAuth token (session only, cleared on logout), plus the video and caption you schedule — which are transmitted to TikTok and not retained. Full details are in our <a href="privacy-policy.html">Privacy Policy</a>.</div>
+      </details>
+      <details>
+        <summary>Can I schedule to multiple accounts?</summary>
+        <div class="a">Each PostFlow login connects one TikTok account — your own. Posting is always to the account you authorized, in line with TikTok's Developer Platform Policy.</div>
+      </details>
+      <details>
+        <summary>What video formats are supported?</summary>
+        <div class="a">MP4 and MOV files up to 500MB, in any aspect ratio TikTok accepts (9:16 recommended). Videos are streamed directly to TikTok at publish time and never stored on our servers.</div>
+      </details>
+      <details>
+        <summary>What happens if TikTok's API is down at my scheduled time?</summary>
+        <div class="a">PostFlow automatically retries for up to 30 minutes and notifies you of the final status. Your video is never silently dropped.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CTA ================= -->
+<section style="padding-top:0;">
+  <div class="container">
+    <div class="cta-band reveal">
+      <div class="blob blob-pink" style="width:300px;height:300px;top:-80px;right:-60px;opacity:.18;"></div>
+      <h2>Your next post is already on time.</h2>
+      <p>Connect your TikTok account and schedule your first video in under two minutes.</p>
+      <button class="btn btn-primary" style="padding:16px 36px;font-size:15px;" onclick="openOAuth()">
+        <svg class="tiktok-icon" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.83a8.17 8.17 0 0 0 4.78 1.52V6.89a4.85 4.85 0 0 1-1.01-.2z"/></svg>
+        Continue with TikTok — it's free
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="logo" href="#"><span class="logo-mark"></span>Post<em>Flow</em></a>
+        <p>PostFlow is a TikTok video scheduling tool built on TikTok's official Content Posting API and Login Kit. Post consistently, grow steadily.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Product</h4>
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <div class="foot-col">
+        <h4>Legal</h4>
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="terms-of-service.html">Terms of Service</a>
+      </div>
+      <div class="foot-col">
+        <h4>Contact</h4>
+        <a href="mailto:riki33766@gmail.com">riki33766@gmail.com</a>
+        <a href="https://developers.tiktok.com/" target="_blank" rel="noopener">TikTok for Developers</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 PostFlow. All rights reserved.</span>
+      <span>Powered by TikTok's official Content Posting API</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ================= OAUTH MODAL ================= -->
+<div id="modal-oauth">
   <div class="oauth-box">
-    <div class="tt-logo">🎵</div>
-    <h2>Log in with TikTok</h2>
-    <p>PostFlow is requesting access to your TikTok account to schedule and publish videos on your behalf.</p>
+    <div class="tt-mark">
+      <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.83a8.17 8.17 0 0 0 4.78 1.52V6.89a4.85 4.85 0 0 1-1.01-.2z"/></svg>
+    </div>
+    <h2>Continue with TikTok</h2>
+    <p>PostFlow is requesting permission to schedule and publish videos to your TikTok account.</p>
     <div class="oauth-scope">
       <ul>
         <li>View your basic profile info</li>
         <li>Upload videos to your account</li>
-        <li>Publish posts to your account</li>
+        <li>Publish posts you schedule</li>
       </ul>
     </div>
-    <button class="btn-tt" onclick="doLogin()">Authorize PostFlow</button>
+    <button class="btn btn-primary" style="width:100%;padding:14px;" onclick="doLogin()">Authorize PostFlow</button>
     <br><button class="btn-cancel" onclick="closeOAuth()">Cancel</button>
-  </div>
-</div>
-
-<!-- ===== DASHBOARD ===== -->
-<div id="page-dashboard">
-  <div class="container" style="padding-top:32px;">
-    <div class="grid2">
-      <div class="stat-card"><div class="label">Scheduled Posts</div><div class="value">3</div></div>
-      <div class="stat-card"><div class="label">Posted This Month</div><div class="value green">12</div></div>
-    </div>
-
-    <div class="card">
-      <h2>Schedule a New Post</h2>
-      <div class="upload-dropzone" onclick="simulateUpload(this)">🎬 &nbsp; Click to select a video file &nbsp;·&nbsp; MP4, MOV – up to 500MB</div>
-      <div class="form-field"><label>Caption</label><textarea placeholder="Write your caption here…"></textarea></div>
-      <div class="form-field"><label>Hashtags</label><input type="text" placeholder="#tiktok #creator #viral"></div>
-      <div class="form-row">
-        <div class="form-field"><label>Scheduled Date &amp; Time</label><input type="datetime-local"></div>
-        <div class="form-field"><label>Privacy</label>
-          <select><option>Public</option><option>Friends only</option><option>Private</option></select>
-        </div>
-      </div>
-      <button class="btn btn-primary" onclick="schedulePost()">Schedule Post</button>
-    </div>
-
-    <div class="card">
-      <h2>Upcoming Schedule</h2>
-      <table>
-        <thead><tr><th>Video</th><th>Caption</th><th>Scheduled At</th><th>Status</th></tr></thead>
-        <tbody id="schedule-table">
-          <tr><td>morning_vlog.mp4</td><td>#morning #routine</td><td>2026-06-01 09:00</td><td><span class="badge badge-yellow">Scheduled</span></td></tr>
-          <tr><td>recipe_video.mp4</td><td>#food #cooking</td><td>2026-06-02 12:00</td><td><span class="badge badge-yellow">Scheduled</span></td></tr>
-          <tr><td>travel_clip.mp4</td><td>#travel #japan</td><td>2026-05-28 18:00</td><td><span class="badge badge-green">Posted</span></td></tr>
-        </tbody>
-      </table>
-    </div>
+    <div class="oauth-fine">By continuing you agree to PostFlow's <a href="terms-of-service.html">Terms of Service</a> and <a href="privacy-policy.html">Privacy Policy</a>. You can revoke access anytime in TikTok settings.</div>
   </div>
 </div>
 
 <!-- toast -->
-<div id="toast">✅ Post scheduled successfully!</div>
-
-<div class="footer">
-  <a href="templates/privacy.html">Privacy Policy</a> &nbsp;·&nbsp;
-  <a href="templates/terms.html">Terms of Service</a> &nbsp;·&nbsp;
-  PostFlow uses TikTok's official Content Posting API
-</div>
+<div id="toast">✅ Post scheduled for Tue 22:00!</div>
 
 <script>
-  function openOAuth() {
-    document.getElementById('modal-oauth').style.display = 'flex';
-  }
-  function closeOAuth() {
-    document.getElementById('modal-oauth').style.display = 'none';
-  }
+  // ----- OAuth modal -----
+  function openOAuth() { document.getElementById('modal-oauth').style.display = 'flex'; }
+  function closeOAuth() { document.getElementById('modal-oauth').style.display = 'none'; }
+  document.getElementById('modal-oauth').addEventListener('click', e => { if (e.target.id === 'modal-oauth') closeOAuth(); });
+
   function doLogin() {
     closeOAuth();
-    document.getElementById('page-landing').style.display = 'none';
-    document.getElementById('page-dashboard').style.display = 'block';
     document.getElementById('header-nav').innerHTML = `
-      <span style="font-size:13px;color:#555;">@my_tiktok_account</span>
-      <div class="avatar">M</div>
-      <button class="btn btn-ghost" onclick="doLogout()">Log out</button>
-    `;
+      <span style="font-size:13px;color:var(--muted);font-weight:600;">@creator_demo</span>
+      <span class="ava" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;background:linear-gradient(135deg,var(--pink),#7c2ae8);">C</span>
+      <button class="btn btn-ghost" style="padding:9px 16px;font-size:13px;" onclick="doLogout()">Log out</button>`;
+    showToast('✅ TikTok account connected!');
   }
   function doLogout() {
-    document.getElementById('page-dashboard').style.display = 'none';
-    document.getElementById('page-landing').style.display = 'block';
     document.getElementById('header-nav').innerHTML = `
       <button class="btn btn-primary" onclick="openOAuth()">
         <svg class="tiktok-icon" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.83a8.17 8.17 0 0 0 4.78 1.52V6.89a4.85 4.85 0 0 1-1.01-.2z"/></svg>
         Connect TikTok
       </button>`;
   }
+
+  // ----- composer demo -----
   function simulateUpload(el) {
-    el.innerHTML = '✅ &nbsp; morning_vlog.mp4 selected';
-    el.style.borderColor = '#16a34a';
-    el.style.color = '#16a34a';
+    el.innerHTML = '✅ &nbsp; my_next_video.mp4 selected (48.2 MB)';
+    el.style.borderColor = 'var(--green)';
+    el.style.color = 'var(--green)';
   }
-  function schedulePost() {
-    const toast = document.getElementById('toast');
-    toast.style.display = 'block';
-    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+  function updateCount(el) { document.getElementById('cap-count').textContent = el.value.length; }
+  function schedulePost() { showToast('✅ Post scheduled for Tue 22:00!'); }
+
+  // ----- toast -----
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.display = 'block';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3200);
   }
+
+  // ----- scroll reveal -----
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 </script>
 </body>
 </html>

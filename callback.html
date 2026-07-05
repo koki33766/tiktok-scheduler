@@ -1,29 +1,74 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>TikTok OAuth Callback</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signing in… | PostFlow</title>
+  <link rel="icon" type="image/png" href="postflow_icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 60px auto; padding: 20px; background: #fafafa; }
-    h2   { margin-bottom: 4px; }
-    .ok  { color: #22aa44; font-weight: bold; font-size: 20px; }
-    .err { color: #cc2222; font-weight: bold; font-size: 20px; }
-    .box { background: #fff; border: 2px solid #22aa44; border-radius: 10px;
-           padding: 20px; margin: 16px 0; }
-    .box.error { border-color: #cc2222; }
-    code { background: #111; color: #7fff7f; padding: 12px 14px; border-radius: 6px;
-           display: block; word-break: break-all; font-size: 13px; margin: 10px 0; }
-    pre  { background: #f0f0f0; padding: 12px; border-radius: 6px;
-           font-size: 13px; word-break: break-all; white-space: pre-wrap; }
-    button { background: #22aa44; color: #fff; border: none; padding: 9px 20px;
-             border-radius: 6px; cursor: pointer; font-size: 14px; }
-    button:hover { background: #1a8833; }
-    small { color: #888; }
+    :root {
+      --pink: #fe2c55; --cyan: #25f4ee; --bg: #0b0b10; --bg-soft: #12121a;
+      --card: #16161f; --line: rgba(255,255,255,.08); --text: #f4f4f6; --muted: #9a9aa8;
+      --green: #34d399; --red: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .blob { position: fixed; border-radius: 50%; filter: blur(120px); opacity: .18; pointer-events: none; }
+    .blob-pink { width: 420px; height: 420px; background: var(--pink); top: -120px; right: -80px; }
+    .blob-cyan { width: 360px; height: 360px; background: var(--cyan); bottom: -120px; left: -100px; opacity: .1; }
+    .card {
+      position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+      width: 460px; max-width: 100%; padding: 44px 38px; text-align: center;
+      box-shadow: 0 30px 80px rgba(0,0,0,.55);
+    }
+    .logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; letter-spacing: -.02em; margin-bottom: 26px; }
+    .logo-mark { width: 30px; height: 30px; border-radius: 9px; position: relative; flex: none; background: linear-gradient(135deg, var(--pink), #ff5c7f); box-shadow: 0 0 18px rgba(254,44,85,.45); }
+    .logo-mark::after { content: ""; position: absolute; inset: 0; border-radius: 9px; background: linear-gradient(315deg, rgba(37,244,238,.55), transparent 55%); }
+    .logo em { font-style: normal; background: linear-gradient(90deg, var(--pink), #ff7a94); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .status-ico { width: 62px; height: 62px; border-radius: 50%; margin: 0 auto 18px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+    .ok  .status-ico { background: rgba(52,211,153,.12); border: 1px solid rgba(52,211,153,.35); }
+    .err .status-ico { background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.35); }
+    h1 { font-size: 21px; font-weight: 800; margin-bottom: 8px; letter-spacing: -.01em; }
+    p.sub { font-size: 14px; color: var(--muted); line-height: 1.65; margin-bottom: 24px; }
+    .box {
+      background: var(--bg-soft); border: 1px solid var(--line); border-radius: 12px;
+      padding: 16px; text-align: left; margin-bottom: 14px;
+    }
+    .box .lbl { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
+    code {
+      display: block; background: #0a0a0e; color: #8ef5f1; border: 1px solid var(--line);
+      padding: 12px 14px; border-radius: 9px; word-break: break-all; font-size: 12.5px; line-height: 1.5;
+      font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+      padding: 13px 24px; border-radius: 12px; font-size: 14px; font-weight: 700; border: none;
+      cursor: pointer; font-family: inherit; margin-top: 6px; text-decoration: none;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-primary { background: linear-gradient(90deg, var(--pink), #ff4d73); color: #fff; box-shadow: 0 4px 24px rgba(254,44,85,.35); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 32px rgba(254,44,85,.55); }
+    .btn-ghost { background: rgba(255,255,255,.06); color: var(--text); border: 1px solid var(--line); }
+    .fine { font-size: 12px; color: #5c5c6b; margin-top: 18px; line-height: 1.6; }
+    .fine a { color: var(--cyan); text-decoration: none; }
+    .err-detail { font-size: 13px; color: var(--red); }
   </style>
 </head>
 <body>
-  <h2>TikTok OAuth コールバック</h2>
-  <div id="result"></div>
+  <div class="blob blob-pink"></div>
+  <div class="blob blob-cyan"></div>
+
+  <div class="card" id="card">
+    <div class="logo"><span class="logo-mark"></span>Post<em>Flow</em></div>
+    <div id="result"></div>
+  </div>
 
   <script>
     const p     = new URLSearchParams(window.location.search);
@@ -31,36 +76,48 @@
     const state = p.get('state');
     const err   = p.get('error');
     const desc  = p.get('error_description');
+    const card  = document.getElementById('card');
     const div   = document.getElementById('result');
 
     if (err) {
+      card.classList.add('err');
       div.innerHTML = `
-        <p class="err">❌ 認証エラー</p>
-        <div class="box error">
-          <b>error:</b> ${err}<br>
-          <b>description:</b> ${desc || '—'}
-        </div>`;
-    } else if (code) {
-      div.innerHTML = `
-        <p class="ok">✅ 認証成功！</p>
+        <div class="status-ico">✕</div>
+        <h1>Authorization failed</h1>
+        <p class="sub">TikTok returned an error while connecting your account.</p>
         <div class="box">
-          <b>code</b>（次のコマンドで使います）：
+          <div class="lbl">Error details</div>
+          <div class="err-detail"><strong>${err}</strong><br>${desc || 'No description provided.'}</div>
+        </div>
+        <a class="btn btn-primary" href="index.html">Try again</a>`;
+    } else if (code) {
+      card.classList.add('ok');
+      div.innerHTML = `
+        <div class="status-ico">✓</div>
+        <h1>TikTok account connected</h1>
+        <p class="sub">Authorization was successful. Finalizing your secure session with TikTok…</p>
+        <div class="box">
+          <div class="lbl">Authorization code</div>
           <code id="code">${code}</code>
-          <button onclick="copyCode(this)">コピー</button>
         </div>
-        <div class="box" style="border-color:#4466cc">
-          <b>次のステップ</b> — ターミナルで実行：
-          <pre>node get_token.js ${code}</pre>
-        </div>
-        <small>state: ${state || '—'}</small>`;
+        <button class="btn btn-ghost" onclick="copyCode(this)">Copy code</button>
+        <a class="btn btn-primary" href="index.html">Continue to PostFlow</a>`;
     } else {
-      div.innerHTML = `<p>パラメータが見つかりません。TikTok認証フローから来てください。</p>`;
+      div.innerHTML = `
+        <div class="status-ico" style="background:rgba(255,255,255,.05);border:1px solid var(--line);">🔒</div>
+        <h1>Waiting for TikTok sign-in</h1>
+        <p class="sub">This page completes the TikTok Login Kit flow. Start by connecting your account from the PostFlow home page.</p>
+        <a class="btn btn-primary" href="index.html">Go to PostFlow</a>`;
     }
 
     function copyCode(btn) {
       navigator.clipboard.writeText(document.getElementById('code').textContent)
-        .then(() => { btn.textContent = 'コピーしました！'; setTimeout(() => btn.textContent = 'コピー', 2000); });
+        .then(() => { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy code', 2000); });
     }
   </script>
+
+  <div style="position:fixed;bottom:20px;left:0;right:0;text-align:center;font-size:12px;color:#5c5c6b;">
+    © 2026 PostFlow · <a href="privacy-policy.html" style="color:#5c5c6b;">Privacy Policy</a> · <a href="terms-of-service.html" style="color:#5c5c6b;">Terms of Service</a>
+  </div>
 </body>
 </html>
